@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge;chrome=1">
+    <title>LaunchDarkly Javascript Demo</title>
+    <!-- Use LaunchDarkly sdk -->
+    <script src="https://unpkg.com/launchdarkly-js-client-sdk@2"></script>
+</head>
+
+<body>
+    <script>
+        //replace this key with your client id
+        const clientId = '62f7ef77acde0f10f7d5d466';
+
+        const hash = str => str.split('').reduce((prev, curr) => Math.imul(31, prev) + curr.charCodeAt(0) | 0, 0);
+
+
+        var user = {
+            anonymous: true
+        };
+
+
+        // Create a new LDClient instance with your environment-specific SDK key
+        var ldclient = LDClient.initialize(clientId, user);
+
+
+        function render() {
+
+
+            var features = ldclient.allFlags();
+            var user = ldclient.getUser();
+            if (user.anonymous != true) {
+                document.getElementById("notspecial").style.display = features.SpecialUsers ? "none" : "block";
+                document.getElementById("special").style.display = features.SpecialUsers ? "block" : "none";
+            }
+            document.querySelector("div").style.color = features.TextColorFeature;
+
+        }
+        function changeuser() {
+
+            var name = document.getElementById("user").value;
+            document.getElementById("welcome").innerHTML = "Welcome, " + name + "!";
+            var user = {
+                key: hash(name),
+                name: name,
+            }
+
+            ldclient.identify(user, null, function () { render(); });
+        }
+
+        ldclient.on('ready', render);
+        //ldclient.on('change', render);
+
+    </script>
+    <div id="main">
+        <div id="welcome">Welcome anonymous user! Pick a name and sign in below.</div>
+        <div id="logon"><input id="user" type="text">
+            <button type="button" onclick="changeuser()">Sign In!</button>
+        </div>
+
+        <div id="notspecial" style="display: none">You are <b>not</b> a special user. This was determined by your user
+            name.
+            If it started with a vowel, you would have been placed in a segment for users starting with a vowel and that
+            would have been used to set this flag. (Go ahead and pick a new user name to experiment.)</div>
+        <div id="special" style="display: none">You are a <b>special</b> user. This was determined by your user name.
+            Because your name started with a vowel, you have been placed in a segment for users starting with a vowel
+            and that has been used to set this flag. (Go ahead and pick a new user name to experiment.)</div>
+        <div id="colorexplanation">
+            The color of the text on this page is pulled directly from a flag. Black, Red and Blue are used roughly
+            equally for anonymous users - so it may change each time you return as an anonymous user. Once you pick a
+            user name, special users get Blue and the rest see Black.
+
+        </div>
+
+
+
+
+    </div>
+
+</body>
+<style>
+    div {
+        margin: 3em;
+    }
+</style>
+
+</html>
